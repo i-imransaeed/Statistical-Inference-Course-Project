@@ -1,2 +1,2 @@
 # Statistical-Inference-Course-Project
-Statistical Inference Course Project for JHU
+Peer-graded Assignment: Statistical Inference Course Project

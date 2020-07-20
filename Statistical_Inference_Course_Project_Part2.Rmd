@@ -1,0 +1,154 @@
+---
+title: 'Statistical Inference Course Project Part 2'
+author: "Muhammad Imran Saeed"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, cache = FALSE)
+```
+##  For this part of the project, we are going to analyze the ToothGrowth data in the R datasets package.
+
+### Tasks to be perfromed for the assignment:
+1. Load the ToothGrowth data and perform some basic exploratory data analyses.
+2. Provide a basic summary of the data.
+3. Use confidence intervals and/or hypothesis tests to compare tooth growth by supp and dose. (Only use the techniques from class, even if there's other approaches worth considering).
+4. State your conclusions and the assumptions needed for your conclusions.
+
+###  Installation and setup.
+```{r package setup and installation,include=FALSE}
+listOfPackages <- c("ggplot2","plyr","tinytex")
+newPackages <- listOfPackages[!(listOfPackages %in% installed.packages()[,"Package"])]
+
+if(length(newPackages)) {
+	message(sprintf("Going to install package(s)[ %s ]\n", newPackages))
+	install.packages(newPackages) 
+} else {
+	message("All packages are already installed. Will skip install pahse")
+}
+
+
+## Load all of the package needed for this project.
+for(package in listOfPackages){
+  library(package, character.only = TRUE)
+}
+knitr::opts_chunk$set(size='\\small')
+knitr::opts_chunk$set(echo=TRUE)
+knitr::opts_chunk$set(warning=FALSE)
+knitr::opts_chunk$set(message=FALSE)
+knitr::opts_chunk$set(fig.align='center')
+```
+
+##### Loading and preprocessing the data
+```{r load data}
+data("ToothGrowth")
+
+```
+The data shows the length of odontoblasts (cells responsible for tooth growth) in 60 guinea pigs. Each animal received one of three dose levels of vitamin C (0.5, 1, and 2 mg/day) by one of two delivery methods, (orange juice (OJ) or ascorbic acid(VC) (a form of vitamin C).
+
+The variable names and the structure of the file are given by
+```{r describe data, paged.print=TRUE}
+# Query names from data set
+names(ToothGrowth)
+# Query structure of data set
+str(ToothGrowth)
+# Check sample data limited to 4 rows to ensure maximum of 6 pages
+head(ToothGrowth,4)
+# Create needed columns for analysis.
+ToothGrowth$dosage <- as.factor(ToothGrowth$dose)
+```
+Summary of the data.
+```{r}
+summary(ToothGrowth)
+```
+### Tooth Length to Delivery Method
+```{r tooth-length-relative-to-delivery-method, echo = TRUE}
+tg <- ToothGrowth
+levels(tg$supp) <- c("Orange Juice", "Ascorbic Acid")
+gLenSupp <- ggplot(data = tg, aes(x = supp, y = len)) + 
+    geom_boxplot(aes(fill = supp)) +
+    xlab("Delivery Method") +
+    ylab("Tooth Length") +
+    theme(plot.title = element_text(size = 14, hjust = 0.5)) +
+    ggtitle("Tooth Length as a Function of Delivery Method")
+print(gLenSupp)
+```
+**Observation**
+Above indicates using OJ as delivery method,independent of dosage, has favorable effect on tooth growth than ascorbic acid.
+### Tooth Length to Dosage Level
+```{r tooth-length-relative-to-dosage-level, echo = TRUE}
+gLenDose <- ggplot(data = ToothGrowth, aes(x = factor(dose), y = len)) + 
+    geom_boxplot(aes(fill = factor(dose))) +
+    xlab("Dosage Level (mg/day)") +
+    ylab("Tooth Length") +
+    guides(fill=guide_legend(title="dose")) +
+    theme(plot.title = element_text(size = 14, hjust = 0.5)) +
+    ggtitle("Tooth Length as a Function of Dosage Level")
+print(gLenDose)
+```
+
+**Observation**
+
+Above indicates higher dosage of VC irrespective of deliver method have favorable outcome on tooth growth. The best results are achieved by high dosage i.e 2mg/day followed by dosage in descending order(1mg ,0,5 mg/ day).
+
+### Tooth Length to Delivery Method and Dosage Level
+```{r tooth-length-relative-to-delivery-method-and-dosage-level, echo = TRUE}
+tg <- ToothGrowth
+levels(tg$supp) <- c("Orange Juice", "Ascorbic Acid")
+gLenSuppDose <- ggplot(data = tg, aes(x = supp, y = len)) + 
+    geom_boxplot(aes(fill = supp)) +
+    facet_wrap(~ dose) +
+    xlab("Delivery Method") +
+    ylab("Tooth Length") +
+    guides(fill=guide_legend(title="supp")) +
+    theme(plot.title = element_text(size = 14, hjust = 0.5, vjust = 0.5),
+          axis.text.x = element_text(angle = 45,
+                                     hjust = 0.5,
+                                     vjust = 0.5,
+                                     margin = margin(b = 10))) +
+    ggtitle("Tooth Length as a Function of Delivery Method and Dosage Level")
+print(gLenSuppDose)
+```
+
+**Observation**
+Above chart indicates higher dosage i.e mg/day is more effective than the lower dosage(s); however, all delivery methods have similar effectiveness.
+```{r confidence-intervals-for-dosage, echo = TRUE}
+
+Lower <- subset(tg, dose %in% c(0.5, 1.0))
+Middle <- subset(tg, dose %in% c(0.5, 2.0))
+Upper <- subset(tg, dose %in% c(1.0, 2.0))
+
+```
+
+Perform T test on basis of dosage for Lower.
+```{r t-test-lower-dosage, echo = TRUE}
+
+t.test(len ~ dose, paired = F, var.equal = F, data = Lower)
+
+```
+
+Perform T test on basis of dosage for Middle.
+```{r t-test-middle-dosage, echo = TRUE}
+
+t.test(len ~ dose, paired = F, var.equal = F, data = Middle)
+
+```
+
+Perform T test on basis of dosage for Upper.
+```{r t-test-upper-dosage, echo = TRUE}
+t.test(len ~ dose, paired = F, var.equal = F, data = Upper)
+```
+
+
+Perform T test on basis of supply
+```{r t-test-for-supply, echo = TRUE}
+t.test(len ~ supp, paired = F, var.equal = F, data = tg)
+```
+
+**Conclusions and the assumptions needed for your conclusions**
+
+1. Supplement type has no effect on tooth growth as we can’t reject null hypothesis here
+2. Increasing dosage results in positive tooth growth, the clear growth of confidence interval allow us to reject null hypothesis
+
